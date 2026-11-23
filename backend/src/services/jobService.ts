@@ -1,4 +1,4 @@
-import { pool } from "../db/pool.js";
+import { pool } from "../../db/pool.js";
 import type { JobsQuery } from "../schemas/job.schema.js";
 import { HttpError } from "../utils/HttpError.js";
 
@@ -36,6 +36,11 @@ const SELECT_JOB = `
 // "50%" or "a_b" typed by a user must not act as LIKE wildcards.
 const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");
 
+function toTsQuery(input: string): string | null {
+  const words = input.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  if (words.length === 0) return null;
+  return words.map((w, i) => (i === words.length - 1 ? `${w}:*` : w)).join(" & ");
+}
 export async function searchJobs(userId: string, query: JobsQuery) {
   const values: unknown[] = [userId];
   const conditions: string[] = [];
@@ -46,7 +51,13 @@ export async function searchJobs(userId: string, query: JobsQuery) {
     conditions.push(sql.replaceAll("?", `$${values.length}`));
   };
 
-  if (query.q) add(`(j.title ILIKE ? OR j.company ILIKE ?)`, `%${escapeLike(query.q)}%`);
+  let tsQueryParam: string | null = null;
+  const tsQuery = query.q ? toTsQuery(query.q) : null;
+  if (tsQuery) {
+    values.push(tsQuery);
+    tsQueryParam = `$${values.length}`;
+    conditions.push(`j.search_vector @@ to_tsquery('english', ${tsQueryParam})`);
+  }
   if (query.location) add(`j.location ILIKE ?`, `%${escapeLike(query.location)}%`);
   if (query.experienceLevel) add(`j.experience_level = ?`, query.experienceLevel);
   if (query.employmentType) add(`j.employment_type = ?`, query.employmentType);
@@ -55,7 +66,7 @@ export async function searchJobs(userId: string, query: JobsQuery) {
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  // 1) How many jobs match in total?
+  //How many jobs match in total?
   const countResult = await pool.query<{ total: number }>(
     `SELECT count(*)::int AS total FROM jobs j
      LEFT JOIN saved_jobs s ON s.job_id = j.id AND s.user_id = $1
@@ -66,12 +77,16 @@ export async function searchJobs(userId: string, query: JobsQuery) {
   const totalPages = Math.max(1, Math.ceil(total / query.pageSize));
   const page = Math.min(query.page, totalPages);
 
-  // 2) Fetch just the requested page. The direction comes from a fixed choice, never from user text.
-  const direction = query.sort === "oldest" ? "ASC" : "DESC";
+    const direction = query.sort === "oldest" ? "ASC" : "DESC";
+  // "relevance" only makes sense when there is a search; otherwise fall back to newest first.
+  const orderBy =
+    query.sort === "relevance" && tsQueryParam
+      ? `ts_rank(j.search_vector, to_tsquery('english', ${tsQueryParam})) DESC, j.posted_at DESC NULLS LAST, j.id`
+      : `j.posted_at ${direction} NULLS LAST, j.id`;
   const { rows } = await pool.query<Job>(
     `${SELECT_JOB}
      ${where}
-     ORDER BY j.posted_at ${direction} NULLS LAST, j.id
+     ORDER BY ${orderBy}
      LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
     [...values, query.pageSize, (page - 1) * query.pageSize],
   );

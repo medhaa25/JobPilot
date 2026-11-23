@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { signupSchema, loginSchema } from "../schemas/auth.schema.js";
 import { createUser, getUserById, verifyCredentials } from "../services/authServices.js";
 import { HttpError } from "../utils/HttpError.js";
-import { clearAuthCookie, setAuthCookie } from "../utils/authCookie.js";
+import { clearAuthCookie, setAuthCookie } from "../utils/authcookie.js";
 import { signToken } from "../utils/token.js";
 export async function signup(req: Request, res: Response) {
   const parsed = signupSchema.safeParse(req.body);

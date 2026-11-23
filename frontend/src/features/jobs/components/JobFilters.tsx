@@ -79,6 +79,7 @@ export default function JobFilters({ value, onChange, onReset }: Props) {
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
+          <option value="relevance">Best match</option>
         </Select>
       </div>
       <div className="flex justify-end">

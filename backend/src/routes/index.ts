@@ -4,12 +4,12 @@ import { requireAuth } from "../middleware/requireAuth.js";
 import * as applications from "../controllers/applicationController.js"
 import * as jobs from "../controllers/jobController.js";
 import * as dashboard from "../controllers/dashboardController.js";
-
+import { loginLimiter, signupLimiter } from "../middleware/rateLimit.js";
 const router = Router();
 
 // Auth
-router.post("/auth/signup", signup);
-router.post("/auth/login", login);
+router.post("/auth/signup", signupLimiter, signup);
+router.post("/auth/login", loginLimiter, login);
 router.post("/auth/logout", logout);
 router.get("/auth/me", requireAuth, me);
 

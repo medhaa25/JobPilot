@@ -1,4 +1,4 @@
-export type JobSort = "newest" | "oldest";
+export type JobSort = "newest" | "oldest" | "relevance";
 
 export interface JobFilters {
   q: string;

@@ -7,6 +7,7 @@ const schema = z.object({
   CLIENT_URL: z.string().default("http://localhost:5173"),
   DATABASE_URL: z.string(),
   JWT_SECRET: z.string().min(1),
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 });
 
 export const env = schema.parse(process.env);

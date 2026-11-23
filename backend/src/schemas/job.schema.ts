@@ -7,7 +7,7 @@ export const jobsQuerySchema = z.object({
   experienceLevel: z.string().optional(),
   employmentType: z.string().optional(),
   source: z.string().optional(),
-  sort: z.enum(["newest", "oldest"]).default("newest"),
+    sort: z.enum(["newest", "oldest", "relevance"]).default("newest"),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(10),
   saved: z
