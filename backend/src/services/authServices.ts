@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { pool } from "../../db/pool.js";
+import { pool } from "../db/pool.js";
 import { HttpError } from "../utils/HttpError.js";
 
 export interface PublicUser {

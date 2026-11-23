@@ -1,4 +1,4 @@
-import { pool } from "../../db/pool.js";
+import { pool } from "../db/pool.js";
 import { listApplications, type Application } from "./applicationServices.js";
 
 export interface DashboardOverview {

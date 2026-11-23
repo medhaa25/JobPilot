@@ -1,7 +1,7 @@
 import request from "supertest";
 import { expect } from "vitest";
 import { app } from "../src/app.js";
-import { pool } from "../db/pool.js";
+import { pool } from "../src/db/pool.js";
 
 export const api = "/api/v1";
 

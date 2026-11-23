@@ -1,4 +1,4 @@
-import { pool } from "../../db/pool.js";
+import { pool } from "../db/pool.js";
 import type { JobsQuery } from "../schemas/job.schema.js";
 import { HttpError } from "../utils/HttpError.js";
 
